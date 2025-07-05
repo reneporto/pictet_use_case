@@ -7,8 +7,17 @@ import json
 import sys
 from pathlib import Path
 
-# Get the API key from the command line
-API_KEY = "qmub4lan4698clu1pep591s845lkprn7p1lrj8j16bfksu5cd59"
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file if it exists
+dotenv_path = Path(__file__).parent.parent / ".env"
+if dotenv_path.exists():
+    load_dotenv(dotenv_path=str(dotenv_path))
+
+# Get the API key from environment variables
+API_KEY = os.environ.get("FOOTPRINT_API_KEY", "")
 
 # Different URL variations to try
 urls_to_try = [
