@@ -2,10 +2,19 @@
 Configuration settings for the Global Footprint Network data ingestion pipeline.
 """
 
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file if it exists
+dotenv_path = Path(__file__).parent.parent / ".env"
+if dotenv_path.exists():
+    load_dotenv(dotenv_path=str(dotenv_path))
+
 # API Configuration
 API_BASE_URL = "https://api.footprintnetwork.org/v1"
-API_USERNAME = "username"  # Replace with your actual username if different
-API_KEY = "qmub4lan4698clu1pep591s845lkprn7p1lrj8j16bfksu5cd59"
+API_USERNAME = os.environ.get("FOOTPRINT_API_USERNAME", "username")
+API_KEY = os.environ.get("FOOTPRINT_API_KEY", "")  # No default value for security
 
 # Data storage configuration
 LOCAL_RAW_DATA_PATH = "/Users/reneporto/pictet/user_case_1/pictet_airflow/aws-mwaa-local-runner/dags/footprint_network/data/raw"

@@ -6,3 +6,7 @@ dags/**/*.pyc
 dags/footprint_network/logs/
 /db-data
 .DS_Store
+
+# Environment variables
+.env
+**/.env
