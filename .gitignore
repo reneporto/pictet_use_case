@@ -3,5 +3,6 @@
 dags/**/*.pyc
 /.idea
 /logs
+dags/footprint_network/logs/
 /db-data
 .DS_Store
