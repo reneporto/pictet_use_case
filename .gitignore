@@ -10,3 +10,25 @@ dags/footprint_network/logs/
 # Environment variables
 .env
 **/.env
+
+# Footprint Network Data Files
+# Exclude content but keep directories with .gitkeep
+dags/footprint_network/data/raw/*
+!dags/footprint_network/data/raw/.gitkeep
+dags/footprint_network/data/processed/*
+!dags/footprint_network/data/processed/.gitkeep
+dags/footprint_network/data/transformed/*
+!dags/footprint_network/data/transformed/.gitkeep
+dags/footprint_network/data/plots/*
+!dags/footprint_network/data/plots/.gitkeep
+dags/footprint_network/data/reports/*
+!dags/footprint_network/data/reports/.gitkeep
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+
+# Cache files
+__pycache__/
+*.py[cod]
+*$py.class
