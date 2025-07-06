@@ -12,77 +12,117 @@ import glob
 import logging
 import argparse
 from datetime import datetime
-import duckdb
+
+# Make the DuckDB import more resilient
+try:
+    import duckdb
+    DUCKDB_AVAILABLE = True
+except ImportError:
+    DUCKDB_AVAILABLE = False
+    logging.warning("DuckDB package is not available. Import operations will fail.")
+    # Create a placeholder for type hints to avoid errors
+    class DuckDBPlaceholder:
+        def __init__(self, *args, **kwargs):
+            raise ImportError("DuckDB is not installed. Please install it with 'pip install duckdb'")
+        
+        def __getattr__(self, name):
+            raise ImportError("DuckDB is not installed. Please install it with 'pip install duckdb'")
+    
+    duckdb = DuckDBPlaceholder()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 class DuckDBParquetImporter:
-    """Fast, decoupled Parquet to DuckDB importer."""
+    """Class for importing Parquet files into DuckDB."""
     
-    def __init__(self, db_path, create_if_not_exists=True):
-        """Initialize the importer with DuckDB database path."""
-        self.db_path = db_path
-        self.conn = None
-        self.create_if_not_exists = create_if_not_exists
+    def __init__(self, db_path=None, create_if_not_exists=True, multithreading=True):
+        """
+        Initialize the DuckDB importer.
         
+        Args:
+            db_path: Path to the DuckDB database file
+            create_if_not_exists: Whether to create the database if it doesn't exist
+            multithreading: Whether to use multithreading for import operations
+        """
+        # Check if DuckDB is available
+        if not DUCKDB_AVAILABLE:
+            logger.warning("DuckDB is not installed. This is fine for DAG loading but will fail during execution.")
+            self.conn = None
+            return
+            
+        self.db_path = db_path
+        self.multithreading = multithreading
+        
+        # Connect to DuckDB
+        self.conn = duckdb.connect(db_path, read_only=False) if db_path else duckdb.connect()
+        
+        # Configure multithreading
+        if self.multithreading:
+            self.conn.execute("PRAGMA threads=8")  # Use 8 threads for parallel processing
+        
+        logger.info(f"Initialized DuckDB importer{'with multithreading' if multithreading else ''}")
+
     def connect(self):
         """Establish connection to DuckDB database."""
+        # Check if DuckDB is available
+        if not DUCKDB_AVAILABLE:
+            logger.error("Cannot connect: DuckDB is not installed.")
+            raise ImportError("DuckDB is not installed. Please install it with 'pip install duckdb'")
+            
         logger.info(f"Connecting to DuckDB at {self.db_path}")
-        self.conn = duckdb.connect(self.db_path, read_only=False)
-        # Enable maximum parallelism for best performance
-        self.conn.execute(f"SET threads TO {os.cpu_count()}")
-        return self.conn
+        try:
+            self.conn = duckdb.connect(self.db_path)
+            logger.info("Connected to DuckDB")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to connect to DuckDB: {str(e)}")
+            return False
         
     def close(self):
-        """Close the database connection."""
-        if self.conn:
+        """Close the DuckDB connection."""
+        if DUCKDB_AVAILABLE and self.conn:
             self.conn.close()
             self.conn = None
-            logger.info("DuckDB connection closed")
+            logger.info("Closed DuckDB connection")
     
     def import_parquet(self, parquet_path, table_name, if_exists="replace"):
         """
-        Import a Parquet file directly into a DuckDB table - extremely efficient.
+        Import a Parquet file into DuckDB.
         
-        Parameters:
-        -----------
-        parquet_path : str
-            Path to the Parquet file
-        table_name : str
-            Name of the target table
-        if_exists : str
-            'replace' to drop and recreate (fastest), 'append' to add data
-        """
-        if not self.conn:
-            self.connect()
+        Args:
+            parquet_path: Path to the Parquet file
+            table_name: Name of the target table
+            if_exists: What to do if the table already exists ('replace' or 'append')
             
-        try:
-            if if_exists == "replace":
-                logger.info(f"Replacing table {table_name} with data from {os.path.basename(parquet_path)}")
-                self.conn.execute(f"DROP TABLE IF EXISTS {table_name}")
+        Returns:
+            Number of rows imported
+        """
+        # Check if DuckDB is available
+        if not DUCKDB_AVAILABLE:
+            logger.error("Cannot import Parquet: DuckDB is not installed.")
+            raise ImportError("DuckDB is not installed. Please install it with 'pip install duckdb'")
+            
+        if if_exists == "replace":
+            self.conn.execute(f"DROP TABLE IF EXISTS {table_name}")
+            self.conn.execute(f"CREATE TABLE {table_name} AS SELECT * FROM read_parquet('{parquet_path}')")
+        else:  # append
+            # Check if table exists
+            result = self.conn.execute(f"SELECT name FROM information_schema.tables WHERE table_name = '{table_name}'")
+            if result.fetchone() is None:
+                # Table doesn't exist, create it
                 self.conn.execute(f"CREATE TABLE {table_name} AS SELECT * FROM read_parquet('{parquet_path}')")
             else:
-                # Check if table exists
-                table_exists = self.conn.execute(
-                    f"SELECT count(*) FROM information_schema.tables WHERE table_name = '{table_name}'"
-                ).fetchone()[0] > 0
-                
-                if not table_exists and self.create_if_not_exists:
-                    logger.info(f"Creating table {table_name} with data from {os.path.basename(parquet_path)}")
-                    self.conn.execute(f"CREATE TABLE {table_name} AS SELECT * FROM read_parquet('{parquet_path}')")
-                else:
-                    logger.info(f"Appending data from {os.path.basename(parquet_path)} to table {table_name}")
-                    self.conn.execute(f"INSERT INTO {table_name} SELECT * FROM read_parquet('{parquet_path}')")
-            
-            # Return row count
-            count_result = self.conn.execute(f"SELECT COUNT(*) FROM {table_name}")
-            return count_result.fetchone()[0]
-            
-        except Exception as e:
-            logger.error(f"Error importing {parquet_path} to {table_name}: {str(e)}")
-            raise
+                # Table exists, append to it
+                self.conn.execute(f"INSERT INTO {table_name} SELECT * FROM read_parquet('{parquet_path}')")
+        
+        # Get row count
+        result = self.conn.execute(f"SELECT COUNT(*) FROM {table_name}")
+        row_count = result.fetchone()[0]
+        
+        logger.info(f"Imported {row_count} rows into table '{table_name}' from {parquet_path}")
+        return row_count
     
     def batch_import_directory(self, directory, file_pattern="*.parquet", table_mapping=None, 
                               timestamp=None, transaction=True):

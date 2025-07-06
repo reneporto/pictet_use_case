@@ -6,10 +6,9 @@ dags/**/*.pyc
 dags/footprint_network/logs/
 /db-data
 .DS_Store
-
-# Environment variables
+dags/.env
+dags/footprint_network/.env
 .env
-**/.env
 
 # Footprint Network Data Files
 # Exclude content but keep directories with .gitkeep
