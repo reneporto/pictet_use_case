@@ -73,7 +73,7 @@ default_args = {
 
 # DAG configuration
 DAG_ID = 'footprint_network_pipeline'
-SCHEDULE_INTERVAL = '@daily'  # Or use '0 0 * * *' for daily at midnight
+SCHEDULE_INTERVAL = None
 START_DATE = datetime(2025, 1, 1)
 TAGS = ['footprint_network', 'ecological_data', 'etl_pipeline']
 CATCHUP = False
@@ -147,10 +147,10 @@ def extract_data(**kwargs):
     
     # If template variables weren't resolved, use environment variables
     if api_username and api_username.startswith('{{'):
-        api_username = os.getenv('FOOTPRINT_NETWORK_USERNAME', 'your_username')
+        api_username = os.getenv('FOOTPRINT_NETWORK_USERNAME')
         logger.info("Using environment variable for API username")
     if api_key and api_key.startswith('{{'):
-        api_key = os.getenv('FOOTPRINT_NETWORK_API_KEY', 'qmub4lan4698clu1pep591s845lkprn7p1lrj8j16bfksu5cd59')
+        api_key = os.getenv('FOOTPRINT_NETWORK_API_KEY')
         logger.info("Using environment variable for API key")
     
     start_year = params.get('start_year')
