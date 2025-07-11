@@ -19,8 +19,8 @@ def main():
     """
     
     # Get API credentials from environment
-    api_key = os.getenv('FOOTPRINT_NETWORK_API_KEY', 'qmub4lan4698clu1pep591s845lkprn7p1lrj8j16bfksu5cd59')
-    username = os.getenv('FOOTPRINT_NETWORK_USERNAME', 'your_username')
+    api_key = os.getenv('FOOTPRINT_NETWORK_API_KEY')
+    username = os.getenv('FOOTPRINT_NETWORK_USERNAME')
     
     print(f"🔑 Using API Key: {api_key[:10]}...")
     print(f"👤 Using Username: {username}")

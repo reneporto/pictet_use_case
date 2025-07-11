@@ -39,8 +39,8 @@ def main():
                 'countries': 'USA,CAN,MEX',  # Only test 3 countries
                 'record_types': 'BiocapTotGHA,EcofootTotGHA',  # Only 2 record types
                 'mode': 'full',
-                'api_username': os.getenv('FOOTPRINT_NETWORK_USERNAME', 'your_username'),
-                'api_key': os.getenv('FOOTPRINT_NETWORK_API_KEY', 'qmub4lan4698clu1pep591s845lkprn7p1lrj8j16bfksu5cd59')
+                'api_username': os.getenv('FOOTPRINT_NETWORK_USERNAME'),
+                'api_key': os.getenv('FOOTPRINT_NETWORK_API_KEY')
             }
         })(),
         'params': {
@@ -49,8 +49,8 @@ def main():
             'countries': 'USA,CAN,MEX',
             'record_types': 'BiocapTotGHA,EcofootTotGHA',
             'mode': 'full',
-            'api_username': os.getenv('FOOTPRINT_NETWORK_USERNAME', 'your_username'),
-            'api_key': os.getenv('FOOTPRINT_NETWORK_API_KEY', 'qmub4lan4698clu1pep591s845lkprn7p1lrj8j16bfksu5cd59')
+            'api_username': os.getenv('FOOTPRINT_NETWORK_USERNAME'),
+            'api_key': os.getenv('FOOTPRINT_NETWORK_API_KEY')
         }
     }
     
