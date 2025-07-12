@@ -19,16 +19,28 @@ The CLI builds a Docker container image locally that’s similar to a MWAA produ
 
 ```text
 dags/
-  example_lambda.py
-  example_dag_with_taskflow_api.py
-  example_redshift_data_execute_sql.py
+  footprint_network_pipeline_dag.py
+  run_dag_directly.py
+  footprint_network/
+    __init__.py
+    import_to_duckdb.py
+    requirements.txt
+    analysis/
+    config/
+    data/
+    logs/
+    models/
+    notebooks/
+    tests/
+    utils/
+db-data/
+  ... (PostgreSQL database files and config)
 docker/
   config/
     airflow.cfg
     constraints.txt
     mwaa-base-providers-requirements.txt
     webserver_config.py
-    .env.localrunner
   script/
     bootstrap.sh
     entrypoint.sh
@@ -42,6 +54,8 @@ plugins/
   README.md
 requirements/
   requirements.txt
+startup_script/
+  startup.sh
 .gitignore
 CODE_OF_CONDUCT.md
 CONTRIBUTING.md
@@ -103,8 +117,8 @@ The following section describes where to add your DAG code and supporting files.
 
 #### DAGs
 
-1. Add DAG code to the `dags/` folder.
-2. To run the sample code in this repository, see the `example_dag_with_taskflow_api.py` file.
+1. Add your DAG code to the `dags/` folder.
+2. The main pipeline DAG is in `footprint_network_pipeline_dag.py`. For custom logic and utilities, see the `footprint_network/` subfolder.
 
 #### Requirements.txt
 
